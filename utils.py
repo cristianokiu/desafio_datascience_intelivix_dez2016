@@ -41,3 +41,29 @@ def plot_confusion_matrix(cm, classes,
 
     subplot.set_ylabel('True label')
     subplot.set_xlabel('Predicted label')
+
+
+def plot_confusion_matrices(cms, classes,
+                            normalize=False,
+                            titles=None,
+                            n_columns=3):
+    n_cms = len(cms)
+    if n_cms < n_columns:
+        n_columns = n_cms
+
+    if not titles:
+        titles = ['Confusion matrix'] * n_cms
+
+    n_rows = n_cms // n_columns + min(1, n_cms % n_columns)
+    fig, subplots = plt.subplots(n_rows, n_columns)
+
+    if n_rows > 1 and n_columns > 1:
+        subplots = itertools.chain.from_iterable(subplots)
+    elif n_rows == 1 and n_columns == 1:
+        subplots = [subplots]
+
+    for title, cm, subplot in zip(titles, cms, subplots):
+        plot_confusion_matrix(cm, classes, title=title, subplot=subplot)
+
+    fig.set_size_inches(n_columns*4, n_rows*4)
+    fig.tight_layout(w_pad=4)
