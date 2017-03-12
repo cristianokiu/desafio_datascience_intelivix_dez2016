@@ -1,6 +1,7 @@
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+from collections.abc import Sequence
 
 # Obs: código adaptado de:
 # http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
@@ -67,3 +68,37 @@ def plot_confusion_matrices(cms, classes,
 
     fig.set_size_inches(n_columns*4, n_rows*4)
     fig.tight_layout(w_pad=4)
+
+
+class ConfusionMatrix(Sequence):
+    def __init__(self, matrix, classes=None):
+        super(Sequence, self).__init__()
+        self.matrix = matrix
+        if classes is None:
+            classes = [None] * len(matrix)
+        self.classes = [_ConfusionMatrixClass(self, i, c)
+                for i, c in enumerate(classes)] 
+
+    def __getitem__(self, i):
+        return self.classes[i]
+    def __len__(self):
+        return len(self.classes)
+
+class _ConfusionMatrixClass():
+    def __init__(self, cm, i, name):
+        self.cm = cm
+        self.name = name
+        self.i = i
+
+        m = cm.matrix
+        row_sum = sum(m[i,:])
+        col_sum = sum(m[:,i])
+        all_sum = sum(m.ravel())
+
+        self.TP = m[i,i]
+        self.FN = row_sum - self.TP
+        self.FP = col_sum - self.TP
+        self.TN = all_sum - (row_sum - col_sum)
+
+    def __str__(self):
+        return "{0} {1}".format(self.i, self.name or 'class')
