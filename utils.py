@@ -7,14 +7,10 @@ from collections.abc import Sequence
 # http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
 
 def plot_confusion_matrix(cm, classes,
-                          normalize=False,
+                          percentage=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Greys,
                           subplot=None):
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
 
     if not subplot:
         subplot = plt.subplot()
@@ -31,21 +27,22 @@ def plot_confusion_matrix(cm, classes,
     subplot.set_yticks(tick_marks)
     subplot.set_yticklabels(classes)
 
-    if normalize:
+    if percentage:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        subplot.text(j, i, cm[i, j],
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
+        subplot.text(j, i,
+                ("{0:.2%}" if percentage else "{0}").format(cm[i, j]),
+                horizontalalignment="center",
+                color="white" if cm[i, j] > thresh else "black")
 
     subplot.set_ylabel('True condition')
     subplot.set_xlabel('Predicted condition')
 
 
 def plot_confusion_matrices(cms, classes,
-                            normalize=False,
+                            percentage=False,
                             titles=None,
                             n_columns=3):
     n_cms = len(cms)
@@ -64,7 +61,8 @@ def plot_confusion_matrices(cms, classes,
         subplots = [subplots]
 
     for title, cm, subplot in zip(titles, cms, subplots):
-        plot_confusion_matrix(cm, classes, title=title, subplot=subplot)
+        plot_confusion_matrix(cm, classes, title=title,
+                subplot=subplot, percentage=percentage)
 
     fig.set_size_inches(n_columns*4, n_rows*4)
     fig.tight_layout(pad=4)
