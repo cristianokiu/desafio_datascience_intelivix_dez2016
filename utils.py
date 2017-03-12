@@ -40,8 +40,8 @@ def plot_confusion_matrix(cm, classes,
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
 
-    subplot.set_ylabel('True label')
-    subplot.set_xlabel('Predicted label')
+    subplot.set_ylabel('True condition')
+    subplot.set_xlabel('Predicted condition')
 
 
 def plot_confusion_matrices(cms, classes,
@@ -67,7 +67,7 @@ def plot_confusion_matrices(cms, classes,
         plot_confusion_matrix(cm, classes, title=title, subplot=subplot)
 
     fig.set_size_inches(n_columns*4, n_rows*4)
-    fig.tight_layout(w_pad=4)
+    fig.tight_layout(pad=4)
 
 
 class ConfusionMatrix(Sequence):
