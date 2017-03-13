@@ -3,14 +3,65 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections.abc import Sequence
 
-# Obs: código adaptado de:
-# http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
 
-def plot_confusion_matrix(cm, classes,
+class ConfusionMatrix(Sequence):
+    def __init__(self, matrix, name=None, classes=None):
+        self.matrix = np.array(matrix)
+        self.name = name
+        self.classes = classes
+
+        n_classes = len(matrix)
+        self.multiclass = n_classes > 2
+
+        self._sub_matrices = []
+        if self.multiclass:
+            self.TP, self.FN, self.FP, self.TN = np.empty((4, n_classes))
+            for i in range(n_classes):
+                row_sum = sum(matrix[i,:])
+                col_sum = sum(matrix[:,i])
+                all_sum = sum(matrix.ravel())
+
+                tp = matrix[i,i]
+                fn = row_sum - tp
+                fp = col_sum - tp
+                tn = all_sum - (row_sum - col_sum)
+                m = [[tp, fn], [fp, tn]]
+                n = None if classes is None else classes[i]
+                
+                self.TP[i], self.FN[i] = tp, fn
+                self.FP[i], self.TN[i] = fp, tn
+                self._sub_matrices.append(ConfusionMatrix(m, n))
+        else:
+            self._sub_matrices = []
+            self.TP, self.FN = matrix[0]
+            self.FP, self.TN = matrix[1]
+
+    def __getitem__(self, i):
+        return self._sub_matrices[i]
+    def __len__(self):
+        return len(self._sub_matrices)
+
+    def __str__(self):
+        return str(self.matrix)
+
+
+# Obs: os plots foram adaptados de:
+# http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+def plot_confusion_matrix(confusion_matrix,
                           percentage=False,
-                          title='Confusion matrix',
                           cmap=plt.cm.Greys,
                           subplot=None):
+
+    cm = confusion_matrix.matrix
+    classes = confusion_matrix.classes
+
+    if classes is None:
+        if confusion_matrix.multiclass:
+            classes = [str(i) for i in range(confusion_matrix.matrix)]
+        else:
+            classes = ['True', 'False']
+
+    title = confusion_matrix.name or 'Confusion matrix'
 
     if not subplot:
         subplot = plt.subplot()
@@ -41,16 +92,17 @@ def plot_confusion_matrix(cm, classes,
     subplot.set_xlabel('Predicted condition')
 
 
-def plot_confusion_matrices(cms, classes,
+def plot_confusion_matrices(confusion_matrices,
                             percentage=False,
-                            titles=None,
+                            title=None,
                             n_columns=3):
-    n_cms = len(cms)
+
+    n_cms = len(confusion_matrices)
     if n_cms < n_columns:
         n_columns = n_cms
-
-    if not titles:
-        titles = ['Confusion matrix'] * n_cms
+    
+    if not title and hasattr(confusion_matrices, 'name'):
+        title = confusion_matrices.name
 
     n_rows = n_cms // n_columns + min(1, n_cms % n_columns)
     fig, subplots = plt.subplots(n_rows, n_columns)
@@ -60,43 +112,12 @@ def plot_confusion_matrices(cms, classes,
     elif n_rows == 1 and n_columns == 1:
         subplots = [subplots]
 
-    for title, cm, subplot in zip(titles, cms, subplots):
-        plot_confusion_matrix(cm, classes, title=title,
+    for confusion_matrix, subplot in zip(confusion_matrices, subplots):
+        plot_confusion_matrix(confusion_matrix,
                 subplot=subplot, percentage=percentage)
 
+
+    if title:
+        fig.suptitle(title, fontsize=16)
     fig.set_size_inches(n_columns*4, n_rows*4)
     fig.tight_layout(pad=4)
-
-
-class ConfusionMatrix(Sequence):
-    def __init__(self, matrix, classes=None):
-        super(Sequence, self).__init__()
-        self.matrix = matrix
-        if classes is None:
-            classes = [None] * len(matrix)
-        self.classes = [_ConfusionMatrixClass(self, i, c)
-                for i, c in enumerate(classes)] 
-
-    def __getitem__(self, i):
-        return self.classes[i]
-    def __len__(self):
-        return len(self.classes)
-
-class _ConfusionMatrixClass():
-    def __init__(self, cm, i, name):
-        self.cm = cm
-        self.name = name
-        self.i = i
-
-        m = cm.matrix
-        row_sum = sum(m[i,:])
-        col_sum = sum(m[:,i])
-        all_sum = sum(m.ravel())
-
-        self.TP = m[i,i]
-        self.FN = row_sum - self.TP
-        self.FP = col_sum - self.TP
-        self.TN = all_sum - (row_sum - col_sum)
-
-    def __str__(self):
-        return "{0} {1}".format(self.i, self.name or 'class')
