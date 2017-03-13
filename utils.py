@@ -15,11 +15,11 @@ class ConfusionMatrix(Sequence):
 
         self._sub_matrices = []
         if self.multiclass:
-            self.TP, self.FN, self.FP, self.TN = np.empty((4, n_classes))
+            self.TP = self.FN = self.FP = self.TN = 0
             for i in range(n_classes):
-                row_sum = sum(matrix[i,:])
-                col_sum = sum(matrix[:,i])
-                all_sum = sum(matrix.ravel())
+                row_sum = matrix[i,:].sum()
+                col_sum = matrix[:,i].sum()
+                all_sum = matrix.sum()
 
                 tp = matrix[i,i]
                 fn = row_sum - tp
@@ -27,14 +27,19 @@ class ConfusionMatrix(Sequence):
                 tn = all_sum - (row_sum - col_sum)
                 m = [[tp, fn], [fp, tn]]
                 n = None if classes is None else classes[i]
+
+                self.TP += tp / n_classes
+                self.FN += fn / n_classes
+                self.FP += fp / n_classes
+                self.TN += tn / n_classes
                 
-                self.TP[i], self.FN[i] = tp, fn
-                self.FP[i], self.TN[i] = fp, tn
                 self._sub_matrices.append(ConfusionMatrix(m, n))
         else:
             self._sub_matrices = []
             self.TP, self.FN = matrix[0]
             self.FP, self.TN = matrix[1]
+
+        self.metrics = ConfusionMatrixMetrics(self)
 
     def __getitem__(self, i):
         return self._sub_matrices[i]
@@ -43,6 +48,42 @@ class ConfusionMatrix(Sequence):
 
     def __str__(self):
         return str(self.matrix)
+
+class ConfusionMatrixMetrics(Sequence):
+    def __init__(self, confusion_matrix):
+        cm = confusion_matrix
+        TP, FN = np.float64(cm.TP), np.float64(cm.FN)
+        FP, TN = np.float64(cm.FP), np.float64(cm.TN)
+        self.confusion_matrix = cm
+        self.list = []
+
+        self._new('TPR', TP / (TP + FN), 'Sensitivity, recall, hit rate, or true positive rate (TPR)')
+        self._new('TNR', TN / (FP + TN), 'Specificity or true negative rate (TNR)')
+        self._new('PPV', TP / (TP + FP), 'Precision or positive predictive value (PPV)')
+        self._new('NPV', TN / (TN + FN), 'Negative predictive value (NPV)')
+        self._new('FPR', 1 - self.TNR, 'Fall-out or false positive rate (FPR)')
+        self._new('FDR', 1 - self.PPV, 'False discovery rate (FDR)')
+        self._new('FNR', 1 - self.TPR, 'Miss rate or false negative rate (FNR)')
+
+        # self._new('ACC', (TP + TN) / (TP + FN + FP + TN), 'Accuracy (ACC)')
+        self._new('ACC', cm.matrix.diagonal().sum() / cm.matrix.sum(), 'Accuracy (ACC)')
+        self._new('F1', (2 * TP) / (2 * TP + FP + FN), 'F1 score - is the harmonic mean of precision and sensitivity')
+        self._new('MCC', (TP * TN - FP * FN) / np.sqrt((TP + FP)*(TP + FN)*(TN + FP)*(TN + FN)), 'Matthews correlation coefficient (MCC)')
+        self._new('BM', self.TPR + self.TNR - 1, 'Informedness or Bookmaker Informedness (BM)')
+        self._new('MK', self.PPV + self.NPV - 1, 'Markedness (MK)')
+
+    def _new(self, acronym, value, description=None):
+        self.__dict__[acronym] = value
+        self.list.append((description, acronym, value))
+
+    def __getitem__(self, i):
+        return self.list[i]
+    def __len__(self):
+        return len(self.list)
+
+    def __str__(self):
+        return '\n\n'.join('{0}\n{1}: {2:.2%}'.format(d, a, v)
+                for a, v, d in self)
 
 
 # Obs: os plots foram adaptados de:
