@@ -57,20 +57,20 @@ class ConfusionMatrixMetrics(Sequence):
         self.confusion_matrix = cm
         self.list = []
 
-        self._new('TPR', TP / (TP + FN), 'Sensitivity, recall, hit rate, or true positive rate (TPR)')
-        self._new('TNR', TN / (FP + TN), 'Specificity or true negative rate (TNR)')
-        self._new('PPV', TP / (TP + FP), 'Precision or positive predictive value (PPV)')
-        self._new('NPV', TN / (TN + FN), 'Negative predictive value (NPV)')
-        self._new('FPR', 1 - self.TNR, 'Fall-out or false positive rate (FPR)')
-        self._new('FDR', 1 - self.PPV, 'False discovery rate (FDR)')
-        self._new('FNR', 1 - self.TPR, 'Miss rate or false negative rate (FNR)')
+        self._new('TPR', TP / (TP + FN), 'Sensitivity, recall, hit rate, or true positive rate')
+        self._new('TNR', TN / (FP + TN), 'Specificity or true negative rate')
+        self._new('PPV', TP / (TP + FP), 'Precision or positive predictive value')
+        self._new('NPV', TN / (TN + FN), 'Negative predictive value')
+        self._new('FPR', 1 - self.TNR, 'Fall-out or false positive rate')
+        self._new('FDR', 1 - self.PPV, 'False discovery rate')
+        self._new('FNR', 1 - self.TPR, 'Miss rate or false negative rate')
 
-        # self._new('ACC', (TP + TN) / (TP + FN + FP + TN), 'Accuracy (ACC)')
-        self._new('ACC', cm.matrix.diagonal().sum() / cm.matrix.sum(), 'Accuracy (ACC)')
+        # self._new('ACC', (TP + TN) / (TP + FN + FP + TN), 'Accuracy')
+        self._new('ACC', cm.matrix.diagonal().sum() / cm.matrix.sum(), 'Accuracy')
         self._new('F1', (2 * TP) / (2 * TP + FP + FN), 'F1 score - is the harmonic mean of precision and sensitivity')
-        self._new('MCC', (TP * TN - FP * FN) / np.sqrt((TP + FP)*(TP + FN)*(TN + FP)*(TN + FN)), 'Matthews correlation coefficient (MCC)')
-        self._new('BM', self.TPR + self.TNR - 1, 'Informedness or Bookmaker Informedness (BM)')
-        self._new('MK', self.PPV + self.NPV - 1, 'Markedness (MK)')
+        self._new('MCC', (TP * TN - FP * FN) / np.sqrt((TP + FP)*(TP + FN)*(TN + FP)*(TN + FN)), 'Matthews correlation coefficient')
+        self._new('BM', self.TPR + self.TNR - 1, 'Informedness or Bookmaker Informedness')
+        self._new('MK', self.PPV + self.NPV - 1, 'Markedness')
 
     def _new(self, acronym, value, description=None):
         self.__dict__[acronym] = value
