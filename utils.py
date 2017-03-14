@@ -107,6 +107,8 @@ def plot_confusion_matrix(confusion_matrix,
     if not subplot:
         subplot = plt.subplot()
 
+    subplot.grid(b=False)
+
     subplot.imshow(cm, interpolation='nearest', cmap=cmap)
     subplot.set_title(title)
     tick_marks = np.arange(len(classes))
