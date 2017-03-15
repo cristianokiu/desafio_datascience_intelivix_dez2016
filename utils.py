@@ -89,7 +89,7 @@ class ConfusionMatrixMetrics(Sequence):
 
 def plot_confusion_matrix(confusion_matrix,
                           percentage=False,
-                          cmap=plt.cm.Blues,
+                          cmap=plt.cm.PuBu,
                           subplot=None):
 
     cm = confusion_matrix.matrix
@@ -133,7 +133,7 @@ def plot_confusion_matrices(confusion_matrices,
                             percentage=False,
                             title=None,
                             n_columns=3,
-                            cmap=plt.cm.Blues,
+                            cmap=plt.cm.PuBu,
                             ):
 
     n_cms = len(confusion_matrices)
