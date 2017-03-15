@@ -2,6 +2,7 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from collections.abc import Sequence
+import seaborn as sns
 
 
 class ConfusionMatrix(Sequence):
@@ -86,11 +87,9 @@ class ConfusionMatrixMetrics(Sequence):
                 for a, v, d in self)
 
 
-# Obs: os plots foram adaptados de:
-# http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
 def plot_confusion_matrix(confusion_matrix,
                           percentage=False,
-                          cmap=plt.cm.Greys,
+                          cmap=plt.cm.Blues,
                           subplot=None):
 
     cm = confusion_matrix.matrix
@@ -104,41 +103,38 @@ def plot_confusion_matrix(confusion_matrix,
 
     title = confusion_matrix.name or 'Confusion matrix'
 
-    if not subplot:
-        subplot = plt.subplot()
-
-    subplot.grid(b=False)
-
-    subplot.imshow(cm, interpolation='nearest', cmap=cmap)
-    subplot.set_title(title)
-    tick_marks = np.arange(len(classes))
-
-    subplot.set_xticks(tick_marks)
-    subplot.set_xticklabels(classes)
-    for tick in subplot.get_xticklabels():
-        tick.set_rotation(45)
-
-    subplot.set_yticks(tick_marks)
-    subplot.set_yticklabels(classes)
-
     if percentage:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        subplot.text(j, i,
-                ("{0:.2%}" if percentage else "{0}").format(cm[i, j]),
-                horizontalalignment="center",
-                color="white" if cm[i, j] > thresh else "black")
+    if not subplot:
+        subplot = plt.subplot()
 
+    sns.heatmap(cm,
+            xticklabels=classes,
+            yticklabels=classes,
+            annot=True,
+            fmt= '.2%' if percentage else 'd',
+            ax=subplot,
+            cbar=False,
+            cmap=cmap
+            )
+
+    subplot.set_title(title)
     subplot.set_ylabel('True condition')
     subplot.set_xlabel('Predicted condition')
+
+    for tick in subplot.get_xticklabels():
+        tick.set_rotation(45)
+    for tick in subplot.get_yticklabels():
+        tick.set_rotation(0)
 
 
 def plot_confusion_matrices(confusion_matrices,
                             percentage=False,
                             title=None,
-                            n_columns=3):
+                            n_columns=3,
+                            cmap=plt.cm.Blues,
+                            ):
 
     n_cms = len(confusion_matrices)
     if n_cms < n_columns:
@@ -157,10 +153,11 @@ def plot_confusion_matrices(confusion_matrices,
 
     for confusion_matrix, subplot in zip(confusion_matrices, subplots):
         plot_confusion_matrix(confusion_matrix,
-                subplot=subplot, percentage=percentage)
+                subplot=subplot, percentage=percentage, cmap=cmap)
 
 
     if title:
         fig.suptitle(title, fontsize=16)
     fig.set_size_inches(n_columns*4, n_rows*4)
     fig.tight_layout(pad=4)
+
