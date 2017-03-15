@@ -144,7 +144,10 @@ def plot_confusion_matrices(confusion_matrices,
         title = confusion_matrices.name
 
     n_rows = n_cms // n_columns + min(1, n_cms % n_columns)
-    fig, subplots = plt.subplots(n_rows, n_columns)
+
+    fig, subplots = plt.subplots(n_rows, n_columns,
+            figsize=(n_columns*4, n_rows*4.2)
+            )
 
     if n_rows > 1 and n_columns > 1:
         subplots = itertools.chain.from_iterable(subplots)
@@ -158,6 +161,5 @@ def plot_confusion_matrices(confusion_matrices,
 
     if title:
         fig.suptitle(title, fontsize=16)
-    fig.set_size_inches(n_columns*4, n_rows*4)
     fig.tight_layout(pad=4)
 
